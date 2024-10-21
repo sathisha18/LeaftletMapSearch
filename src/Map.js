@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet-geosearch/dist/geosearch.css';
@@ -31,10 +31,26 @@ const RoutingMachine = ({ start, destination }) => {
 };
 
 const MapComponent = () => {
-  // Set default positions
-  const [startPosition, setStartPosition] = useState([20.5937, 78.9629]); // India
+  const [startPosition, setStartPosition] = useState([20.5937, 78.9629]); // India default
   const [destinationPosition, setDestinationPosition] = useState([0, 0]); // Empty initially
   const [error, setError] = useState('');
+
+  // Get user's current location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setStartPosition([latitude, longitude]);
+        },
+        () => {
+          setError('Unable to retrieve your location');
+        }
+      );
+    } else {
+      setError('Geolocation is not supported by this browser');
+    }
+  }, []);
 
   const handleSearch = async (event, setPosition) => {
     event.preventDefault();
@@ -60,14 +76,12 @@ const MapComponent = () => {
     }
   };
 
-  // Swap the start and destination positions
   const handleSwap = () => {
     const temp = startPosition;
     setStartPosition(destinationPosition);
     setDestinationPosition(temp);
   };
 
-  // Placeholder for summing up latitudes and longitudes (for demo purposes)
   const handleSum = () => {
     const sumLatitude = startPosition[0] + destinationPosition[0];
     const sumLongitude = startPosition[1] + destinationPosition[1];
@@ -77,10 +91,8 @@ const MapComponent = () => {
   return (
     <div className="container mt-5">
       <h3 className="text-center mb-4">Route Finder</h3>
-      
-      {/* Search and Swap Section */}
+
       <div className="row mb-4">
-        {/* Starting Location */}
         <div className="col-md-5 mb-2">
           <form onSubmit={(event) => handleSearch(event, setStartPosition)}>
             <input
@@ -93,12 +105,10 @@ const MapComponent = () => {
           </form>
         </div>
 
-        {/* Swap Button */}
         <div className="col-md-2 d-flex align-items-center justify-content-center">
           <button onClick={handleSwap} className="btn btn-secondary">Swap</button>
         </div>
 
-        {/* Destination Location */}
         <div className="col-md-5 mb-2">
           <form onSubmit={(event) => handleSearch(event, setDestinationPosition)}>
             <input
@@ -112,28 +122,21 @@ const MapComponent = () => {
         </div>
       </div>
 
-      {/* Error Message */}
       {error && <p className="text-danger text-center">{error}</p>}
 
-      {/* Sum Button */}
       <div className="row mb-3">
         <div className="col text-center">
           <button onClick={handleSum} className="btn btn-warning">Sum Coordinates</button>
         </div>
       </div>
 
-      {/* Map Section */}
       <MapContainer center={startPosition} zoom={5} style={{ height: '400px', width: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        {/* Marker for the start location */}
         {startPosition && <Marker position={startPosition}></Marker>}
-        {/* Marker for the destination location */}
         {destinationPosition[0] !== 0 && <Marker position={destinationPosition}></Marker>}
-
-        {/* Routing between start and destination */}
         {destinationPosition[0] !== 0 && (
           <RoutingMachine start={startPosition} destination={destinationPosition} />
         )}
