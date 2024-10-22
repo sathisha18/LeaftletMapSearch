@@ -7,8 +7,19 @@ import L from 'leaflet';
 import 'leaflet-routing-machine';
 import 'leaflet-control-geocoder';
 
+// Import the marker image from your project
+import customMarkerImg from './assets/images/marker-image.png'; // Correct path to marker image
+
 // Initialize the OpenStreetMap provider
 const provider = new OpenStreetMapProvider();
+
+// Custom marker icon
+const customIcon = L.icon({
+  iconUrl: customMarkerImg,
+  iconSize: [30, 40],
+  iconAnchor: [15, 40],
+  popupAnchor: [0, -40],
+});
 
 const RoutingMachine = ({ start, destination }) => {
   const map = useMap();
@@ -77,9 +88,13 @@ const MapComponent = () => {
   };
 
   const handleSwap = () => {
-    const temp = startPosition;
-    setStartPosition(destinationPosition);
-    setDestinationPosition(temp);
+    if (startPosition[0] !== 0 && destinationPosition[0] !== 0) {
+      const temp = startPosition;
+      setStartPosition(destinationPosition);
+      setDestinationPosition(temp);
+    } else {
+      setError('Both start and destination positions must be set before swapping.');
+    }
   };
 
   const handleSum = () => {
@@ -135,8 +150,8 @@ const MapComponent = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        {startPosition && <Marker position={startPosition}></Marker>}
-        {destinationPosition[0] !== 0 && <Marker position={destinationPosition}></Marker>}
+        {startPosition && <Marker position={startPosition} icon={customIcon}></Marker>}
+        {destinationPosition[0] !== 0 && <Marker position={destinationPosition} icon={customIcon}></Marker>}
         {destinationPosition[0] !== 0 && (
           <RoutingMachine start={startPosition} destination={destinationPosition} />
         )}
